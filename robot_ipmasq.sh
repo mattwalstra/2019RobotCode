@@ -9,7 +9,7 @@
 #      - Name it Robot Router or something similar to distinguish it from a normal wired connection to the robot
 #      - Under the ethernet tab, select the ethernet device to use
 #      - Under general, deselect "Automatically connect to this network..."
-#      - IPv4 settings, switch to manual, add an address of 10.9.0.1 with a netmask of 24
+#      - IPv4 settings, switch to manual, add an address of 10.70.54.1 with a netmask of 24
 #      - Set dns servers to "8.8.8.8, 8.8.4.4" (not sure this matters)
 
 # Wire in to the robot network
@@ -21,7 +21,7 @@
 # run this script
 
 # If the Jetson and/or Rio can't get on the net after that, a few things to check
-# Gateway needs to be set to 10.9.0.1 on them
+# Gateway needs to be set to 10.70.54.1 on them
 # DNS server should be set to "8.8.8.8,8.8.8.4" 
 
 # Use the robot_ipmasq_off script to disable sharing
@@ -33,7 +33,7 @@ INTERNET_IP=192.168.0.168
 INTERNET_HW=wlp3s0
 
 # IP address and hardware connected to the private Rio network side
-PRIVATE_IP=10.9.0.1
+PRIVATE_IP=10.70.54.1
 PRIVATE_HW=enp2s0
 
 sudo sysctl net.ipv4.ip_forward=1

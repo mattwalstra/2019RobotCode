@@ -1,4 +1,4 @@
-JETSON_ADDR=10.9.0.8
+JETSON_ADDR=10.70.54.8
 
 source ~/.bashrc
 scp ubuntu@$JETSON_ADDR:/mnt/900_2/_2019-* bagfiles/

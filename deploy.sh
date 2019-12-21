@@ -4,10 +4,10 @@
 set -o pipefail
 
 # IP addresses of the roboRIO and Jetson to deploy code on.
-ROBORIO_ADDR=10.9.0.2
+ROBORIO_ADDR=10.70.54.2
 
 # This can be an array of IP address if there are multiple Jetsons
-JETSON_ADDR=(10.9.0.8)
+JETSON_ADDR=(10.70.54.8)
 
 # Environment to deploy to (prod or dev).
 INSTALL_ENV=dev
