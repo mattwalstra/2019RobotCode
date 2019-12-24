@@ -1,10 +1,10 @@
 #!/bin/bash
 
-dev_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-dev_dir="$( dirname "$dev_dir" )"
+#dev_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+#dev_dir="$( dirname "$dev_dir" )"
 
 set -e
-set -o pipefail
+#set -o pipefail
 
 docker run -it --net=host -v  /tmp/.X11-unix:/tmp/.X11-unix \
  -v $HOME/2019RobotCode:/home/ubuntu/2019RobotCode \
