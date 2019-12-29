@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   frc_msgs
   frc_interfaces
+  spark_max_interface
 )
 
 add_message_files (
@@ -196,6 +197,9 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc2019-linux-gnueabi")
 		${CTRE_LIB_DIR}/libCTRE_PhoenixCanutils.a
 	)
 
+	set(SPARK_MAX ../../../spark_max)
+	include_directories(${SPARK_MAX}/include)
+
 	set (FRCROBOT_HW_MAIN_SRCS ${FRCROBOT_HW_MAIN_SRCS} 
 		src/dummy_wpilib_common.cpp
 		src/dummy_wpilib_hw.cpp
@@ -216,6 +220,12 @@ if (NOT "${ARM_PREFIX}" STREQUAL "arm-frc2019-linux-gnueabi")
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/SmallVector.cpp
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/StringRef.cpp
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Twine.cpp
+		${SPARK_MAX}/src/CANDigitalInput.cpp
+		${SPARK_MAX}/src/CANEncoder.cpp
+		${SPARK_MAX}/src/CANPIDController.cpp
+		${SPARK_MAX}/src/CANSparkMax.cpp
+		${SPARK_MAX}/src/CANSparkMaxLowLevel.cpp
+		${SPARK_MAX}/src/SparkMax.cpp	
 	)
 file(GLOB
 	ntcore_native_src ${ALLWPILIB}/ntcore/src/main/native/cpp/*.cpp
@@ -314,6 +324,12 @@ file(GLOB
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/StringRef.cpp
 		${ALLWPILIB}/wpiutil/src/main/native/cpp/llvm/Twine.cpp
 		${ntcore_native_src}
+		${SPARK_MAX}/src/CANDigitalInput.cpp
+		${SPARK_MAX}/src/CANEncoder.cpp
+		${SPARK_MAX}/src/CANPIDController.cpp
+		${SPARK_MAX}/src/CANSparkMax.cpp
+		${SPARK_MAX}/src/CANSparkMaxLowLevel.cpp
+		${SPARK_MAX}/src/SparkMax.cpp
 		)
 
 	target_link_libraries(frcrobot_phoenixsim_main

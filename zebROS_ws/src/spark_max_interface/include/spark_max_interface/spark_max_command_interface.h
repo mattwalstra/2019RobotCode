@@ -21,14 +21,14 @@ class SparkMaxHWCommand
 			, pidf_constants_changed_{false}
 			, pidf_output_min_{-1}
 			, pidf_output_max_{1}
-			, pidf_reference_value_{0}
-			, pidf_reference_value_changed_{false}
+			, pidf_config_changed_{false}
 			, pidf_reference_ctrl_(kDutyCycle)
 			, pidf_reference_ctrl_changed_(false)
 			, pidf_reference_slot_(0)
 			, pidf_reference_slot_changed_(false)
 			, pidf_arb_feed_forward_{0}
-			, pidf_config_changed_{false}
+			, pidf_reference_value_{0}
+			, pidf_reference_value_changed_{false}
 			, forward_limit_switch_polarity_(kNormallyOpen)
 			, forward_limit_switch_enabled_(false)
 			, forward_limit_switch_changed_(false)
@@ -52,6 +52,10 @@ class SparkMaxHWCommand
 			, follower_id_(-1)
 			, follower_invert_(false)
 			, follower_changed_(false)
+			, enable_read_thread_(true);
+			, enable_read_thread_changed_(false);
+			
+			//will need to add motion profiling
 		{
 		}
 
@@ -78,6 +82,11 @@ class SparkMaxHWCommand
 			return false;
 		}
 
+		void resetSetPoint(void)
+		{
+			set_point_changed_ = true;
+		}
+
 		void setInverted(bool inverted)
 		{
 			if (inverted_ != inverted)
@@ -99,6 +108,11 @@ class SparkMaxHWCommand
 				return true;
 			}
 			return false;
+		}
+
+		void resetInverted(void)
+		{
+			inverted_changed_ = true;
 		}
 
 		void setPGain(size_t slot, double p_gain)
@@ -262,6 +276,16 @@ class SparkMaxHWCommand
 			return false;
 		}
 
+		void resetPIDFConstants(size_t slot)
+		{
+			if (slot >= SPARK_MAX_PID_SLOTS)
+			{
+				ROS_WARN("Invalid slot passed to SparkMaxHWCommand::resetPIDF()");
+				return;
+			}
+			pidf_constants_changed_[slot] = true;
+		}
+
 		void setPIDFOutputMin(size_t slot, double pidf_output_min)
 		{
 			if (slot >= SPARK_MAX_PID_SLOTS)
@@ -308,6 +332,30 @@ class SparkMaxHWCommand
 			return pidf_output_max_[slot];
 		}
 
+		void setPIDFReferenceOutput(size_t slot, double pidf_reference_value)
+		{
+			if (slot >= SPARK_MAX_PID_SLOTS)
+			{
+				ROS_ERROR_STREAM("SparkMaxHWState::setPIDFReferenceOutput() : invalid slot " << slot);
+				return;
+			}
+			if (pidf_reference_value_ != pidf_reference_value)
+			{
+				pidf_reference_value_[slot] = pidf_reference_value;
+				pidf_reference_value_changed_[slot] = true;
+			}
+			
+		}
+		double getPIDFReferenceOutput(size_t slot) const
+		{
+			if (slot >= SPARK_MAX_PID_SLOTS)
+			{
+				ROS_ERROR_STREAM("SparkMaxHWState::getPIDFReferenceOutput() : invalid slot " << slot);
+				return 0;
+			}
+			return pidf_reference_value_[slot];
+		}
+
 		void setPIDFReferenceCtrl(ControlType pidf_reference_ctrl)
 		{
 			if (pidf_reference_ctrl != pidf_reference_ctrl_)
@@ -330,6 +378,11 @@ class SparkMaxHWCommand
 			}
 		}
 
+		void resetPIDFReferenceCtrl(void)
+		{
+			pidf_reference_ctrl_changed_ = true;
+		}
+
 		void setPIDFArbFeedForward(size_t slot, double pidf_arb_feed_forward)
 		{
 			if (slot >= SPARK_MAX_PID_SLOTS)
@@ -340,7 +393,7 @@ class SparkMaxHWCommand
 			if (pidf_arb_feed_forward != pidf_arb_feed_forward_[slot])
 			{
 				pidf_arb_feed_forward_[slot] = pidf_arb_feed_forward;
-				pidf_config_changed_[slot] = true;
+				pidf_reference_value_changed_[slot] = true;
 			}
 		}
 		double getPIDFArbFeedForward(size_t slot) const
@@ -353,10 +406,37 @@ class SparkMaxHWCommand
 			return pidf_arb_feed_forward_[slot];
 		}
 
+		bool changedPIDFReferenceValue(size_t slot,
+				double &pidf_reference_value,
+				double &arb_feed_forward)
+		{
+			if (slot >= SPARK_MAX_PID_SLOTS)
+			{
+				ROS_ERROR_STREAM("SparkMaxHWCommand::changedPIDFReferenceValue() : invalid slot " << slot);
+				return false;
+			}
+			pidf_reference_value = pidf_reference_value_[slot];
+			arb_feed_forward = pidf_arb_feed_forward_[slot];
+			
+			if(pidf_reference_value_changed_[slot]){
+				pidf_reference_value_changed_[slot] = false;
+				return true;
+			}
+		}
+
+		void resetPIDFReferenceValue(size_t slot){
+			if (slot >= SPARK_MAX_PID_SLOTS)
+			{
+				ROS_ERROR_STREAM("SparkMaxHWCommand::resetPIDFReferenceValue() : invalid slot " << slot);
+				return false;
+			}
+
+			pidf_reference_value_changed_[slot] = true;
+		}
+
 		bool changedPIDFConfig(size_t slot,
 				double &output_min,
-				double &output_max,
-				double &arb_feed_forward)
+				double &output_max)
 		{
 			if (slot >= SPARK_MAX_PID_SLOTS)
 			{
@@ -365,13 +445,23 @@ class SparkMaxHWCommand
 			}
 			output_min = pidf_output_min_[slot];
 			output_max = pidf_output_max_[slot];
-			arb_feed_forward = pidf_arb_feed_forward_[slot];
+			
 			if (pidf_config_changed_[slot])
 			{
 				pidf_config_changed_[slot] = false;
 				return true;
 			}
 			return false;
+		}
+
+		void resetPIDFConfig(size_t slot)
+		{
+			if (slot >= SPARK_MAX_PID_SLOTS)
+			{
+				ROS_WARN("Invalid index passed to SparkMaxHWCommand::resetPIDFConfig()");
+				return;
+			}
+			pidf_config_changed_[slot] = true;
 		}
 
 		void setPIDFReferenceSlot(size_t slot)
@@ -401,6 +491,16 @@ class SparkMaxHWCommand
 				return true;
 			}
 			return false;
+		}
+
+		void resetPIDFReferenceSlot(size_t pidf_reference_slot)
+		{
+			if (pidf_reference_slot >= SPARK_MAX_PID_SLOTS)
+			{
+				ROS_WARN("Invalid index passed to SparkMaxHWCommand::resetPIDFConfig()");
+				return;
+			}
+			pidf_reference_slot_changed_ = true;
 		}
 
 
@@ -444,6 +544,11 @@ class SparkMaxHWCommand
 			return false;
 		}
 
+		void resetForwardLimitSwitch(void)
+		{
+			forward_limit_switch_changed_ = true;
+		}
+
 		void setReverseLimitSwitchPolarity(LimitSwitchPolarity reverse_limit_switch_polarity)
 		{
 			if (reverse_limit_switch_polarity_ != reverse_limit_switch_polarity)
@@ -482,6 +587,11 @@ class SparkMaxHWCommand
 				return true;
 			}
 			return false;
+		}
+
+		void resetReverseLimitSwitch(void)
+		{
+			reverse_limit_switch_changed_ = true;
 		}
 
 		void setCurrentLimit(unsigned int current_limit)
@@ -551,6 +661,11 @@ class SparkMaxHWCommand
 			return false;
 		}
 
+		void resetCurrentLimits(void)
+		{
+			current_limit_changed_ = true;
+		}
+
 		void setSecondaryCurrentLimit(unsigned int secondary_current_limit)
 		{
 			if (secondary_current_limit_ != secondary_current_limit)
@@ -590,6 +705,10 @@ class SparkMaxHWCommand
 			return false;
 		}
 
+		void resetSecondaryCurrentLimits(void)
+		{
+			secondary_current_limit_changed_ = true;
+		}
 
 		void setIdleMode(IdleMode idle_mode)
 		{
@@ -614,6 +733,11 @@ class SparkMaxHWCommand
 			return false;
 		}
 
+		void resetIdleMode(void)
+		{
+			idle_mode_changed_ = true;
+		}
+
 		void setRampRate(double ramp_rate)
 		{
 			if (ramp_rate_ != ramp_rate)
@@ -635,6 +759,11 @@ class SparkMaxHWCommand
 				return true;
 			}
 			return false;
+		}
+
+		void resetRampRate(void)
+		{
+			ramp_rate_changed_ = true;
 		}
 
 		void setFollowerType(ExternalFollower follower_type)
@@ -689,6 +818,30 @@ class SparkMaxHWCommand
 				return true;
 			}
 			return false;
+		}
+
+		void resetFollower(void)
+		{
+			follower_changed_ = true;
+		}
+
+		void setEnableReadThread(bool enable_read_thread)
+		{
+			enable_read_thread_ = enable_read_thread;
+			enable_read_thread_changed_ = true;
+		}
+		double getEnableReadThread(void) const
+		{
+			return enable_read_thread_;
+		}
+
+		bool enableReadThreadChanged(bool &enable_read_thread)
+		{
+			enable_read_thread = enable_read_thread_;
+			if (!enable_read_thread_changed_)
+				return false;
+			enable_read_thread_changed_ = false;
+			return true;
 		}
 
 	private:
@@ -746,6 +899,9 @@ class SparkMaxHWCommand
 		int                 follower_id_;
 		bool                follower_invert_;
 		bool                follower_changed_;
+
+		bool				enable_read_thread_;
+		bool				enable_read_thread_changed_;
 };
 
 // Handle - used by each controller to get, by name of the

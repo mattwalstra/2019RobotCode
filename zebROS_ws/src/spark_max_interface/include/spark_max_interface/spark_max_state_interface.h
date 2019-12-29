@@ -70,6 +70,7 @@ class SparkMaxHWState
 			, applied_output_(0)
 			, output_current_(0)
 			, motor_temperature_(0)
+			, enable_read_thread_(true)
 		{
 		}
 
@@ -526,6 +527,17 @@ class SparkMaxHWState
 	{
 		return motor_temperature_;
 	}
+
+	void setEnableReadThread(bool enable_read_thread)
+		{
+			enable_read_thread_ = enable_read_thread;
+		}
+	
+	bool getEnableReadThread(void) const
+		{
+			return enable_read_thread_;
+		}
+
 	private:
 		int                 device_id_;
 		MotorType           motor_type_;
@@ -580,6 +592,8 @@ class SparkMaxHWState
 		double              applied_output_;
 		double              output_current_;
 		double              motor_temperature_;
+
+		bool				enable_read_thread_;
 };
 
 typedef StateHandle<const SparkMaxHWState> SparkMaxStateHandle;

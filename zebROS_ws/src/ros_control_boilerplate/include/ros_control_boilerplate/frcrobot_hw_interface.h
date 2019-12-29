@@ -54,6 +54,7 @@
 
 #include <ctre/phoenix/motorcontrol/can/TalonSRX.h>
 #include <ctre/phoenix/motorcontrol/can/VictorSPX.h>
+#include <rev/CANSparkMax.h>
 #include <frc/IterativeRobotBase.h>
 #include <frc/AnalogInput.h>
 #include <frc/DriverStation.h>
@@ -245,9 +246,17 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		bool convertControlFrame(const hardware_interface::ControlFrame input,
 			ctre::phoenix::motorcontrol::ControlFrame &output);
 
+		bool convertRevMotorType(const hardware_interface::MotorType input,
+			rev::CANSparkMaxLowLevel::MotorType &output) const;
+		
+		double getRevConversionFactor(bool velocity);
+
 		bool safeTalonCall(ctre::phoenix::ErrorCode error_code,
 				const std::string &talon_method_name);
 
+		bool safeSparkCall(rev::CANError error_code, 
+				const std::string &spark_method_name);
+		
 		double navX_zero_;
 
 		std::vector<std::shared_ptr<ctre::phoenix::motorcontrol::IMotorController>> ctre_mcs_;
@@ -257,6 +266,14 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::vector<std::shared_ptr<hardware_interface::TalonHWState>> ctre_mc_read_thread_states_;
 		std::vector<std::thread> ctre_mc_read_threads_;
 		void ctre_mc_read_thread(std::shared_ptr<ctre::phoenix::motorcontrol::IMotorController> ctre_mc, std::shared_ptr<hardware_interface::TalonHWState> state, std::shared_ptr<std::mutex> mutex, Tracer tracer);
+
+		std::vector<std::shared_ptr<rev::CANSparkMax>> can_spark_maxs_;
+
+		// Maintain a separate read thread for each spark_max SRX
+		std::vector<std::shared_ptr<std::mutex>> spark_max_read_state_mutexes_;
+		std::vector<std::shared_ptr<hardware_interface::SparkMaxHWState>> spark_max_read_thread_states_;
+		std::vector<std::thread> spark_max_read_threads_;
+		void spark_max_read_thread(std::shared_ptr<rev::CANSparkMax> spark_max, std::shared_ptr<hardware_interface::SparkMaxHWState> state, std::shared_ptr<std::mutex> mutex, Tracer tracer);
 
 		std::vector<std::shared_ptr<frc::NidecBrushless>> nidec_brushlesses_;
 		std::vector<std::shared_ptr<frc::DigitalInput>> digital_inputs_;
@@ -290,6 +307,7 @@ class FRCRobotHWInterface : public ros_control_boilerplate::FRCRobotInterface
 		std::vector<Tracer> ctre_mc_thread_tracers_;
 		std::vector<Tracer> pdp_thread_tracers_;
 		std::vector<Tracer> pcm_thread_tracers_;
+		std::vector<Tracer> spark_max_thread_tracers_;
 		Tracer read_tracer_;
 
 };  // class
