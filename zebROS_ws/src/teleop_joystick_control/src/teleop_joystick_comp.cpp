@@ -443,11 +443,18 @@ void evaluateCommands(const ros::MessageEvent<frc_msgs::JoystickState const>& ev
 		{
             //TODO get rid of this testing cde
             //If we don't have a cargo, intake one
-			preemptActionlibServers();
-            ROS_INFO_STREAM("Joystick1: Intake Cargo");
-            behaviors::IntakeGoal goal;
-            intake_cargo_ac->sendGoal(goal);
-            /*
+			//preemptActionlibServers();
+            //ROS_INFO_STREAM("Joystick1: Intake Cargo");
+            //behaviors::IntakeGoal goal;
+            //intake_cargo_ac->sendGoal(goal);
+            ROS_INFO_STREAM("Joystick2: buttonYPress");
+			cargo_intake_controller::CargoIntakeSrv msg;
+			msg.request.open = false;
+			msg.request.power = 0.0;
+			if (!manual_server_cargoIn.call(msg))
+				ROS_ERROR("teleop call to manual_server_cargoIn failed for buttonYPress");
+			
+			/*
 			if (intake_arm_down)
 			{
 				ROS_INFO_STREAM("Toggling to roller not extended");
@@ -473,7 +480,7 @@ void evaluateCommands(const ros::MessageEvent<frc_msgs::JoystickState const>& ev
 		{
 			//forces right bumper to be held for intaking to continue
 			//TODO test this brings arm up instantly
-			intake_cargo_ac->cancelGoalsAtAndBeforeTime(ros::Time::now());
+			//intake_cargo_ac->cancelGoalsAtAndBeforeTime(ros::Time::now());
 			ROS_INFO_STREAM("Joystick1: bumperRightRelease");
 
 		}
@@ -986,7 +993,7 @@ int main(int argc, char **argv)
 
 	manual_server_panelIn = n.serviceClient<panel_intake_controller::PanelIntakeSrv>("/frcrobot_jetson/panel_intake_controller/panel_command");
 	//manual_server_cargoOut = n.serviceClient<cargo_outtake_controller::CargoOuttakeSrv>("/cargo_outtake_controller/cargo_outtake_command");
-	manual_server_cargoIn = n.serviceClient<cargo_intake_controller::CargoIntakeSrv>("/cargo_intake_controller/cargo_intake_command");
+	manual_server_cargoIn = n.serviceClient<intake_controller::IntakeSrv>("/intake_controller/intake_command");
 
     continue_outtake_client = n.serviceClient<std_srvs::Empty>("/hatch_outtake/continue_outtake_panel");
 

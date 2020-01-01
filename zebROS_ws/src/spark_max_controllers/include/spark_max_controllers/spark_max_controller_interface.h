@@ -601,16 +601,16 @@ class SparkMaxControllerInterface
 		// state
 		void syncDynamicReconfigure(void)
 		{
-#if 0
+
 			if (srv_)
 			{
-				TalonConfigConfig config(params_.toConfig());
+				SparkMaxConfigConfig config(params_.toConfig());
 				// first call in updateConfig is another lock, this is probably
 				// redundant
 				// boost::recursive_mutex::scoped_lock lock(*srv_mutex_);
 				srv_->updateConfig(config);
 			}
-#endif
+
 		}
 
 		// Use data in params to actually set up SparkMax
