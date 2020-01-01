@@ -1,12 +1,13 @@
 #pragma once
-
+#include <dynamic_reconfigure/server.h>
 #include <spark_max_interface/spark_max_command_interface.h>
+#include <spark_max_controllers/SparkMaxConfigConfig.h
 #include <XmlRpcValue.h>
 
 namespace spark_max_controllers
 {
 
-class SparkMaxCIParam
+class SparkMaxCIParams
 {
 	public:
 		SparkMaxCIParams(void) :
@@ -29,7 +30,7 @@ class SparkMaxCIParam
 			, current_limit_(0) // TODO : better defaults
 			, current_limit_stall_(0)
 			, current_limit_free_(0)
-			, current_limit_rpm_(0)
+			, current_limit_RPM_(0)
 			, secondary_current_limit_(0)
 			, secondary_current_limit_cycles_(0)
 			, idle_mode_(kCoast)
@@ -38,6 +39,143 @@ class SparkMaxCIParam
 			, follower_id_(-1)
 			, follower_invert_(false)
 			{
+			}
+
+			// Update params set by a dynamic reconfig config
+			// Also pass in current params for ones which aren't
+			// dynamically reconfigurable - pass them through
+			// to the new one
+			SparkMaxCIParams(const SparkMaxConfigConfig &config)
+			{
+				p_gain_[0] = config.p0;
+				p_gain_[1] = config.p1;
+				p_gain_[2] = config.p2;
+				p_gain_[3] = config.p3;
+
+				i_gain_[0] = config.i0;
+				i_gain_[1] = config.i1;
+				i_gain_[2] = config.i2;
+				i_gain_[3] = config.i3;
+
+				d_gain_[0] = config.d0;
+				d_gain_[1] = config.d1;
+				d_gain_[2] = config.d2;
+				d_gain_[3] = config.d3;
+
+				f_gain_[0] = config.f0;
+				f_gain_[1] = config.f1;
+				f_gain_[2] = config.f2;
+				f_gain_[3] = config.f3;
+
+				i_zone_[0] = config.izone0;
+				i_zone_[1] = config.izone1;
+				i_zone_[2] = config.izone2;
+				i_zone_[3] = config.izone3;
+
+				d_filter_[0] = config.dfilter0;
+				d_filter_[1] = config.dfilter1;
+				d_filter_[2] = config.dfilter2;
+				d_filter_[3] = config.dfilter3;	
+
+				pidf_output_min_[0] = config.pidfoutputmax0;
+				pidf_output_min_[1] = config.pidfoutputmax1;
+				pidf_output_min_[2] = config.pidfoutputmax2;
+				pidf_output_min_[3] = config.pidfoutputmax3;
+
+				pidf_output_max_[0] = config.pidfoutputmax0;
+				pidf_output_max_[1] = config.pidfoutputmax1;
+				pidf_output_max_[2] = config.pidfoutputmax2;
+				pidf_output_max_[3] = config.pidfoutputmax3;
+
+				pidf_arb_feed_forward_[0] = config.pidfarbfeedforward0;
+				pidf_arb_feed_forward_[1] = config.pidfarbfeedforward1;
+				pidf_arb_feed_forward_[2] = config.pidfarbfeedforward2;
+				pidf_arb_feed_forward_[3] = config.pidfarbfeedforward3;	
+
+				pidf_reference_slot_ = config.pidfslot;
+				forward_limit_switch_polarity_ = static_cast<hardware_interface::LimitSwitchPolarity>(config.forwardlimitswitchpolarity);
+				forward_limit_switch_enabled_ = config.forwardlimitswitchenabled;
+
+				reverse_limit_switch_polarity_ = static_cast<hardware_interface::LimitSwitchPolarity>(config.reverselimitswitchpolarity);
+				reverse_limit_switch_enabled_ = config.reverselimitswitchenabled;
+
+				current_limit_ = config.currentlimit;
+				current_limit_stall_ = config.currentlimitstall;
+				current_limit_free_ = config.currentlimitfree;
+				current_limit_RPM_ = config.currentlimitrpm;
+
+				secondary_current_limit_ = config.secondarycurrentlimit;
+				secondary_current_limit_cycles_ = config.secondarycurrentlimitcycles;
+
+				idle_mode_ = static_cast<hardware_interface::IdleMode>(config.idlemode);
+				ramp_rate_ = config.ramprate;
+			}
+
+			TalonConfigConfig toConfig(void) const
+			{
+				TalonConfigConfig config;
+				config.p0 = p_gain_[0];
+				config.p1 = p_gain_[1];
+				config.p2 = p_gain_[2];
+				config.p3 = p_gain_[3];
+
+				config.i0 = i_gain_[0];
+				config.i1 = i_gain_[1];
+				config.i2 = i_gain_[2];
+				config.i3 = i_gain_[3];
+
+				config.d0 = d_gain_[0];
+				config.d1 = d_gain_[1];
+				config.d2 = d_gain_[2];
+				config.d3 = d_gain_[3];
+
+				config.f0 = f_gain_[0];
+				config.f1 = f_gain_[1];
+				config.f2 = f_gain_[2];
+				config.f3 = f_gain_[3];
+
+				config.izone0 = i_zone_[0];
+				config.izone1 = i_zone_[1];
+				config.izone2 = i_zone_[2];
+				config.izone3 = i_zone_[3];
+
+				config.dfilter0 = d_filter_[0];
+				config.dfilter1 = d_filter_[1];
+				config.dfilter2 = d_filter_[2];
+				config.dfilter3 = d_filter_[3];	
+
+				config.pidfoutputmax0 = pidf_output_min_[0];
+				config.pidfoutputmax1 = pidf_output_min_[1];
+				config.pidfoutputmax2 = pidf_output_min_[2];
+				config.pidfoutputmax3 = pidf_output_min_[3];
+
+				config.pidfoutputmax0 = pidf_output_max_[0];
+				config.pidfoutputmax1 = pidf_output_max_[1];
+				config.pidfoutputmax2 = pidf_output_max_[2];
+				config.pidfoutputmax3 = pidf_output_max_[3];
+
+				config.pidfarbfeedforward0 = pidf_arb_feed_forward_[0];
+				config.pidfarbfeedforward1 = pidf_arb_feed_forward_[1];
+				config.pidfarbfeedforward2 = pidf_arb_feed_forward_[2];
+				config.pidfarbfeedforward3 = pidf_arb_feed_forward_[3];	
+
+				config.pidfslot = pidf_reference_slot_;
+				config.forwardlimitswitchpolarity = forward_limit_switch_polarity_[hardware_interface::LimitSwitchPolarity::kNormallyOpen];
+				config.forwardlimitswitchenabled = forward_limit_switch_enabled_;
+
+				config.reverselimitswitchpolarity = reverse_limit_switch_polarity_[hardware_interface::LimitSwitchPolarity::kNormallyOpen];
+				config.reverselimitswitchenabled = reverse_limit_switch_enabled_;
+
+				config.currentlimit = current_limit_;
+				config.currentlimitstall = current_limit_stall_;
+				config.currentlimitfree = current_limit_free_;
+				config.currentlimitrpm = current_limit_RPM_;
+
+				config.secondarycurrentlimit = secondary_current_limit_;
+				config.secondarycurrentlimitcycles = secondary_current_limit_cycles_;
+
+				config.idlemode = idle_mode_[hardware_interface::kBrake];
+				config.ramprate = ramp_rate_;
 			}
 
 			// Read a joint name from the given nodehandle's params
@@ -345,6 +483,11 @@ class SparkMaxControllerInterface
 			return initWithNode(smci, smsi, joint_nodes);
 		}
 
+		void callback(spark_max_controllers::TalonConfigConfig &config, uint32_t /*level*/)
+		{
+			writeParamsToHW(SparkMaxCIParams(config), spark_max_);
+		}
+
 		// Set the setpoint for the motor controller
 		virtual void setCommand(const double command)
 		{
@@ -354,7 +497,7 @@ class SparkMaxControllerInterface
 		// Set the mode of the motor controller
 		virtual void setMode(hardware_interface::ControlType mode);
 		{
-			spark_max_->setPIDReferenceCtrl(mode);
+			spark_max_->setPIDFReferenceCtrl(mode); //PIDF or PID
 		}
 
 		virtual bool setPIDFSlot(int slot)
@@ -379,7 +522,7 @@ class SparkMaxControllerInterface
 		hardware_interface::SparkMaxCommandHandle                     spark_max_;
 		SparkMaxCIParams                                              params_;
 
-#if 0
+
 		std::shared_ptr<dynamic_reconfigure::Server<SparkMaxnConfig>> srv_;
 		std::shared_ptr<boost::recursive_mutex>                       srv_mutex_;
 
@@ -389,13 +532,13 @@ class SparkMaxControllerInterface
 		std::vector<std::shared_ptr<dynamic_reconfigure::Server<SparkMaxConfig>>> follower_srvs_;
 		std::vector<std::shared_ptr<boost::recursive_mutex>>                      follower_srv_mutexes_;
 
-#endif
+
 
 		// Used to set initial (and only) talon
 		// mode for FixedMode derived classes
 		virtual bool setInitialMode(void)
 		{
-			ROS_INFO_STREAM("SparkMax " << talon_.getName() << " Base class setInitialMode");
+			ROS_INFO_STREAM("SparkMax " << spark_max_.getName() << " Base class setInitialMode");
 			return true;
 		}
 
@@ -411,7 +554,7 @@ class SparkMaxControllerInterface
 		{
 			ROS_WARN("spark max init start");
 			// Read params from startup and intialize Talon using them
-			TalonCIParams params;
+			SparkMaxCIParams params;
 			if (!readParams(n, params))
 			   return false;
 
@@ -424,7 +567,7 @@ class SparkMaxControllerInterface
 				return false;
 
 			ROS_WARN("spark_max init past writeParamsToHW");
-#if 0
+
 			if (dynamic_reconfigure)
 			{
 				// Create dynamic_reconfigure Server. Pass in n
@@ -433,7 +576,7 @@ class SparkMaxControllerInterface
 				// copies of the class to be started, each getting
 				// their own namespace.
 				srv_mutex = std::make_shared<boost::recursive_mutex>();
-				srv = std::make_shared<dynamic_reconfigure::Server<talon_controllers::SparkMaxConfig>>(*srv_mutex_, n);
+				srv = std::make_shared<dynamic_reconfigure::Server<spark_max_controllers::SparkMaxConfig>>(*srv_mutex_, n);
 
 				ROS_WARN("init updateConfig");
 				// Without this, the first call to callback()
@@ -447,7 +590,7 @@ class SparkMaxControllerInterface
 				// rqt_reconfigure or the like
 				srv->setCallback(boost::bind(&SparkMaxControllerInterface::callback, this, _1, _2));
 			}
-#endif
+
 			ROS_WARN("spark max init returning");
 
 			return true;
@@ -544,7 +687,7 @@ class SparkMaxDutyCycleControllerInterface : public SparkMaxFixedModeControllerI
 			// class is derived from the FixedMode class
 			// it can't be reset
 			spark_max_->setPIDFreferenceCtrl(hardware_interface::kDutyCycle);
-			ROS_INFO_STREAM("Set up spark max" << talon_.getName() << " in duty cycle mode");
+			ROS_INFO_STREAM("Set up spark max" << spark_max_.getName() << " in duty cycle mode");
 			return true;
 		}
 		// Maybe disable the setPIDFSlot call since that makes
@@ -603,7 +746,7 @@ class SparkMaxFollowerControllerInterface : public SparkMaxFixedModeControllerIn
 						  hardware_interface::SparkMaxStateInterface   *smsi,
 						  ros::NodeHandle &n) override
 		{
-			if (!tsi)
+			if (!smsi)
 			{
 				ROS_ERROR("NULL SparkMaxStateInterface in SparkMaxFollowerCommandInterface");
 				return false;
@@ -679,8 +822,8 @@ j
 			// these can't be reset. Hopefully we never have a case
 			// where a follower mode SparkMax changes which other
 			// SparkMax it is following during a match?
-			talon_->setFollowerType(follow_device_type);
-			talon_->setFollowerID(follow_device_id);
+			spark_max_->setFollowerType(follow_device_type); //TODO: Should these be talon_ or spark_max_
+			spark_max_->setFollowerID(follow_device_id);
 		}
 };
 }

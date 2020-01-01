@@ -15,7 +15,59 @@ find_package(catkin REQUIRED COMPONENTS
   realtime_tools
   roscpp
   spark_max_interface
+  urdf
 )
+
+generate_dynamic_reconfigure_options(cfg/SparkMaxConfig.cfg)
+
+add_service_files(FILES PidfSlot.srv)
+generate_messages(DEPENDENCIES spark_max_controllers)
+
+catkin_package(
+  CATKIN_DEPENDS
+    control_msgs
+    controller_interface
+	message_runtime
+    realtime_tools
+	spark_max_interface
+    urdf
+	dynamic_reconfigure
+  INCLUDE_DIRS include
+  #LIBRARIES ${PROJECT_NAME}
+)
+
+include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS})
+
+add_library(${PROJECT_NAME}
+  src/spark_max_controller.cpp
+)
+
+## Add cmake target dependencies of the executable
+## same as for the library above. This is needed to force
+## talon controller messages to be built before the
+## talon controller code tries to use them
+add_dependencies(${PROJECT_NAME}
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
+# Install
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  PATTERN *~ EXCLUDE
+  PATTERN *.sw? EXCLUDE
+  )
+
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(FILES spark_max_controllers_plugins.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -106,12 +158,12 @@ find_package(catkin REQUIRED COMPONENTS
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
+#catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES spark_max_controllers
 #  CATKIN_DEPENDS control_msgs controller_interface dynamic_reconfigure message_generation realtime_tools roscpp spark_max_interface
 #  DEPENDS system_lib
-)
+#)
 
 ###########
 ## Build ##
@@ -119,10 +171,10 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
+#include_directories(
 # include
-  ${catkin_INCLUDE_DIRS}
-)
+#  ${catkin_INCLUDE_DIRS}
+#)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

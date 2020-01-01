@@ -1,0 +1,27 @@
+<library path="lib/libspark_max_controllers">
+
+<class name="spark_max_controllers/SparkMaxDutyCycleController" type="spark_max_controllers::SparkMaxDutyCycleController" base_class_type="controller_interface::ControllerBase">
+    <description>
+     Configure and run a Spark Max in percent output mode 
+    </description>
+</class>
+<class name="spark_max_controllers/SparkMaxFollowerController" type="spark_max_controllers::SparkMaxFollowerController" base_class_type="controller_interface::ControllerBase">
+    <description>
+     Configure and run a Spark Max in follower mode 
+    </description>
+</class>
+<class name="spark_max_controllers/SparkMaxPositionController" type="spark_max_controllers::SparkMaxPositionController" base_class_type="controller_interface::ControllerBase">
+    <description>
+     Configure and run a Spark Max in position mode 
+    </description>
+</class>
+<class name="spark_max_controllers/SparkMaxVelocityController" type="spark_max_controllers::SparkMaxVelocityController" base_class_type="controller_interface::ControllerBase">
+    <description>
+     Configure and run a Spark Max in velocity mode 
+    </description>
+</class>
+<class name="spark_max_controllers/SparkMaxVoltageController" type="spark_max_controllers::SparkMaxVoltageController" base_class_type="controller_interface::ControllerBase">
+    <description>
+     Configure and run a Spark Max in voltage mode 
+    </description>
+</class>

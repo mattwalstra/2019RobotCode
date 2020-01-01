@@ -872,7 +872,7 @@ class SparkMaxHWCommand
 		double              pidf_arb_feed_forward_[SPARK_MAX_PID_SLOTS];
 		bool                pidf_config_changed_[SPARK_MAX_PID_SLOTS];
 
-		// Forward and Reverse Limit switches
+		// Forward and Reverse Limit switches, TODO: add soft limits
 		LimitSwitchPolarity forward_limit_switch_polarity_;
 		bool                forward_limit_switch_enabled_;
 		bool                forward_limit_switch_changed_;
